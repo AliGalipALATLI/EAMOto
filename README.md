@@ -1,7 +1,7 @@
 <div align="center">
   <img src="EAMOto.png" alt="EAMOto Logo" width="250"/>
 
-# EAMOto - Epic Asset Manager Auto-Auth (Fast Mode)
+# EAMOto - Epic Asset Manager Auto-Auth
 
 </div>
 
@@ -9,91 +9,100 @@
 ![Platform](https://img.shields.io/badge/platform-Linux-lightgrey.svg)
 ![C++](https://img.shields.io/badge/language-C%2B%2B17-blue)
 
-**EAMOto** is a lightweight and fast auto-login tool designed to permanently solve the annoying authorization code prompt issue for the Flatpak version of **Epic Asset Manager** on Linux.
+**EAMOto** is a lightweight semi-auto login tool that permanently solves the annoying authorization code prompt for the Flatpak version of **Epic Asset Manager** on Linux.
 
-Are you tired of constantly opening your browser to copy and paste authorization codes? EAMOto runs in the background, grabs your active Epic Games session cookies directly from your Firefox or Zen Browser profile, fetches a new token, and seamlessly injects it into the Epic Asset Manager's configuration file.
+Tired of opening your browser, copying an auth code, and pasting it every time? EAMOto handles the entire flow automatically — it extracts your active Epic Games session from your browser, fetches a fresh authorization code, launches EAM, and types the code in for you.
 
 ---
 
 ## How It Works ⚙️
 
-EAMOto's "Fast Mode" follows three main steps:
+1. **🍪 Cookie Extraction:** Reads your active Epic Games session cookies directly from your Zen Browser or Firefox profile (`cookies.sqlite` + WAL files).
+2. **🔑 Auth Code Fetch:** Uses `libcurl` with modern browser headers to request a fresh `authorizationCode` from the Epic Games API — no manual copy-pasting.
+3. **🚀 Semi-Auto Login:** Launches Epic Asset Manager and copies the authorization code to your clipboard. Simply paste it (`Ctrl+V`) into the EAM login screen and hit **Authenticate**. No more opening browsers or copying codes manually!
 
-1. **🍪 Cookie Extraction:** It pulls your SSO cookies (`cookies.sqlite`) for `epicgames.com` directly from your Firefox profile.
-2. **🔑 Token Exchange:** Using these cookies, it sends a request to the Epic Games APIs (via `libcurl`), quietly retrieves an `authorizationCode`, and exchanges it for a permanent **Access Token**.
-3. **🚀 Injection and Launch:** It writes the newly fetched token data into the Epic Asset Manager's Flatpak configuration file (`~/.var/app/.../keyfile`) while strictly preserving the GLib format standards, and then launches EAM. The entire process takes less than a second!
+> **Note:** EAMOto works by automating the existing Epic login screen — it does not modify any system files or store credentials.
 
 ---
 
 ## System Requirements 📋
 
-- **Operating System:** Linux
-- **Browser:** Firefox or Zen Browser (you must have logged into Epic Games at least once)
-- **Epic Asset Manager:** Flatpak version
-- **Development Environment:** C++17 compatible compiler, CMake, Curl, SQLite3, Nlohmann-JSON library
+- **OS:** Linux (X11)
+- **Browser:** Zen Browser or Firefox (must be logged into Epic Games at least once)
+- **Epic Asset Manager:** Flatpak version (`io.github.achetagames.epic_asset_manager`)
+- **Dependencies:** `cmake`, `curl`, `sqlite3`, `nlohmann-json`, `xclip`, `xdotool`
 
 ---
 
-## 🛠️ Quick Install for Arch Linux
-
-There is an installation script provided in the main directory for Arch-based distributions (EndeavourOS, Manjaro, etc.) that installs dependencies via `pacman` and compiles the project.
-
-Run the following command in the terminal from the project's root directory:
+## 🛠️ Quick Install — Arch Linux
 
 ```bash
-git clone https://github.com/aligalipalatli/EAMOto.git
+git clone https://github.com/AliGalipALATLI/EAMOto.git
 cd EAMOto
 chmod +x install.sh
 ./install.sh
 ```
 
-**What does this script do?**
-
-- Installs the required packages (`base-devel cmake curl sqlite nlohmann-json`).
-- Compiles the project using CMake.
-- Copies the resulting executable (`eamoto`) to your `~/.local/bin` directory.
-- Creates a **Desktop Entry** (.desktop) file and adds a new icon named **"Epic Asset Manager (Auto-Login)"** to your Linux application launcher (Rofi, Whisker, Gnome, etc.).
-- 🎉 You can now search for EAM in your system menu and launch it directly via EAMOto!
+The script will:
+- Install all required packages via `pacman`
+- Compile the project with CMake
+- Copy the binary to `~/.local/bin/eamoto`
+- Create a **Desktop Entry** so you can launch it directly from your app menu as **"Epic Asset Manager (Auto-Login)"**
 
 ---
 
-## 📦 Manual Installation (Debian / Ubuntu / Fedora)
+## 📦 Manual Install — Debian / Ubuntu / Fedora
 
-For other Linux distributions, you can follow these steps to compile it manually:
+**1. Install dependencies:**
 
-1. **Install required libraries:**
-   - **Debian/Ubuntu:** `sudo apt install build-essential cmake libcurl4-openssl-dev libsqlite3-dev nlohmann-json3-dev`
-   - **Fedora:** `sudo dnf install gcc-c++ cmake libcurl-devel sqlite-devel json-devel`
+- **Debian/Ubuntu:**
+  ```bash
+  sudo apt install build-essential cmake libcurl4-openssl-dev libsqlite3-dev nlohmann-json3-dev xclip xdotool
+  ```
+- **Fedora:**
+  ```bash
+  sudo dnf install gcc-c++ cmake libcurl-devel sqlite-devel json-devel xclip xdotool
+  ```
 
-2. **Compile the project:**
+**2. Build:**
 
-   ```bash
-   git clone https://github.com/aligalipalatli/EAMOto.git
-   cd EAMOto
-   cmake -B build -S .
-   cmake --build build
-   ```
+```bash
+git clone https://github.com/AliGalipALATLI/EAMOto.git
+cd EAMOto
+cmake -B build -S .
+cmake --build build
+```
 
-3. **Run:**
-   ```bash
-   ./build/eamoto
-   ```
+**3. Run:**
+
+```bash
+./build/eamoto
+```
 
 ---
 
 ## 🏗️ Project Architecture
 
-- **`main.cpp`:** Controls the execution chain, checks if valid permissions exist, and starts the process.
-- **`cookie.cpp`:** Uses SQLite to search and locate Firefox profiles and extract `epicgames.com` session data.
-- **`auth.cpp`:** The CURL-based HTTP client. It sends SSO cookies, receives the Authorization Code, and returns the final token from the `/api/oauth/token` route using Base64 Headers (includes JSON Parsing).
-- **`config.cpp`:** The module that reads and safely manipulates the configuration (`keyfile`) structure inside EAM's Flatpak sandbox without breaking it.
+- **`main.cpp`:** Orchestrates the full flow — cookie extraction → auth code fetch → EAM launch → clipboard copy.
+- **`cookie.cpp`:** Locates your Zen/Firefox profile via `profiles.ini`, copies the SQLite cookie database (including WAL files for live sessions), and extracts Epic Games session cookies.
+- **`auth.cpp`:** CURL-based HTTP client that sends cookies to the Epic API and retrieves the authorization code.
+- **`config.cpp`:** Keyfile read/write helpers (reserved for future use).
+- **`utils.cpp`:** Common utilities (`getHomeDir()`).
+
+---
+
+## ⚠️ Known Limitations
+
+- Requires **XWayland** — works on Wayland desktops as long as XWayland is enabled (most distros have it by default)
+- The browser does not need to be closed, but must have an active Epic Games session
+- Auth codes are single-use and expire in ~5 minutes — EAMOto fetches one fresh per launch
 
 ---
 
 ## License 📄
 
-This project is licensed under the **MIT License**. Check the [LICENSE](LICENSE) file in the repository for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-_The era of copy-pasting code every time is over. Happy game developing! 🎮_
+*The era of copy-pasting codes is over. Happy game developing! 🎮🐧*
