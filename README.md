@@ -98,11 +98,4 @@ cmake --build build
 - Auth codes are single-use and expire in ~5 minutes — EAMOto fetches one fresh per launch
 
 ---
-
-## License 📄
-
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
 *The era of copy-pasting codes is over. Happy game developing! 🎮🐧*
