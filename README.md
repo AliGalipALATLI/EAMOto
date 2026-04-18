@@ -5,7 +5,7 @@
 
 </div>
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://opensource.org/licenses/GPL-2.0)
 ![Platform](https://img.shields.io/badge/platform-Linux-lightgrey.svg)
 ![C++](https://img.shields.io/badge/language-C%2B%2B17-blue)
 
